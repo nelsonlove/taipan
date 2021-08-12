@@ -1,5 +1,3 @@
-from enum import Enum
-
 from abstract import GoodEnum, PortEnum, SelectableEnum
 
 
@@ -35,7 +33,3 @@ class BattleOrders(SelectableEnum):
     RUN = "Run"
     THROW_CARGO = "Throw Cargo"
 
-
-class Decisions(SelectableEnum):
-    YES = 'Yes'
-    NO = 'No'

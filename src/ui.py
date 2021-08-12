@@ -279,8 +279,9 @@ class InteractiveUI(UIObject, GameObject):
         return choice
 
     def yes_or_no(self, prompt=''):
-        order = self.ask_orders(prompt, enums.Decisions)
-        return order is enums.Decisions.YES
+        self.tell(prompt)
+        choice = get_char(allowed=['Y', 'y', 'N', 'n'])
+        return choice.lower() == 'y'
 
     def choose_port(self, string="Taipan, do you wish me to go to: {} ?"):
         port_str = comma_list([port.shortcut + ') ' + str(port) for port in enums.Ports])

@@ -51,15 +51,15 @@ credits = """
 
 ====================
 
- Programmed by:
-           Jay Link
-    jlink@ilbbs.com
-
-====================
-
  Copyright (c)
         1978 - 2002
          Art Canfil
+
+====================
+
+ C port by:
+           Jay Link
+    jlink@ilbbs.com
 
 ====================
 
