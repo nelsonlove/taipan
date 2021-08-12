@@ -498,22 +498,6 @@ class FightUI(GameUI):
         self.guns.print(0, 0, '{g:>9}'.format(g='We have'))
         self.guns.print(0, 1, '{g:>9}'.format(g=guns_str))
 
-    # def tell(self, msg, wait=False, clear=True, **kwargs):
-    #     pass
-    # if clear:
-    #     self.comprador.clear()
-    # self.comprador.print(1, 1, msg)
-    # with term.hidden_cursor(), term.cbreak():
-    #     lines = ['\n'.join(wrap(block, width=term.width)) for block in msg.splitlines()]
-    #     if comprador:
-    #         lines = ["Captain's Report:"] + lines
-    #     msg = '\n'.join(lines)
-    #     self.comprador.tell(msg, **kwargs)
-    # if wait is True:
-    #     self.wait()
-    # elif wait:
-    #     self.wait(wait)
-
     def draw_incoming_fire(self):
         fullscreen_fire = '\n'.join(['*' * term.width for _ in range(term.height)])
         for i in range(3):
