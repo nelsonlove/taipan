@@ -3,10 +3,11 @@ from enum import Enum, auto
 
 from blessed import Terminal
 
-import goods
+
 import string
-from orders import BattleOrders
+from enums import BattleOrders
 import ui
+from abstract import GameObject
 
 term = Terminal()
 
@@ -19,268 +20,231 @@ class BattleResult(Enum):
     BATTLE_LOST = auto()
 
 
-def get_orders(player, order):
-    while True:
-        with term.hidden_cursor(), term.cbreak():
-            user_input = term.inkey(timeout=3)
-        if user_input.lower() == 'f':
-            order = BattleOrders.FIGHT
-        elif user_input.lower() == 'r':
-            order = BattleOrders.RUN
-        elif user_input.lower() == 't':
-            order = BattleOrders.THROW_CARGO
+class Battle(GameObject):
+    def __init__(self, game, num_ships, li=False):
+        super().__init__(game)
+        self.current_ships = num_ships
+        self.num_ships = num_ships
+        self.li = li
+        self.orders = None
+        self.num_on_screen = 0
+        self.ships_on_screen = [0 for _ in range(10)]
+        self.sk = 0
+        self.ok = 1
+        self.ik = 1
+        self.result = BattleResult.BATTLE_NOT_FINISHED
+        self.ui.switch()
 
-        if not order:
-            player.ui.tell("Taipan, what shall we do??    (f=Fight, r=Run, t=Throw cargo)")
-        else:
-            return order
+    @property
+    def ship(self):
+        return self.player.ship
 
+    @property
+    def status(self):
+        return max(0, int(100 - (self.ship.damage / self.ship.capacity) * 100))
 
-def sea_battle(player, num_ships, li=False):
-    order = None
-    num_on_screen = 0
-    ships_on_screen = [0 for _ in range(10)]
-    s0 = num_ships
-    sk = 0
-    ok = 1
-    ik = 1
+    def get_orders(self):
+        while True:
+            with term.hidden_cursor(), term.cbreak():
+                user_input = term.inkey(timeout=3)
+            if user_input.lower() == 'f':
+                self.orders = BattleOrders.FIGHT
+            elif user_input.lower() == 'r':
+                self.orders = BattleOrders.RUN
+            elif user_input.lower() == 't':
+                self.orders = BattleOrders.THROW_CARGO
+            else:
+                self.orders = None
 
-    player.ui.switch(player.game)
-    player.ui.stats(num_ships, player.ship.guns, order)
+            if not self.orders:
+                self.ui.tell("Taipan, what shall we do??    (f=Fight, r=Run, t=Throw cargo)")
+            else:
+                break
 
-    while num_ships:
-        assert(player.ship.capacity >= 0)  # TODO why is this here
-        status = max(0, int(100 - (player.ship.damage / player.ship.capacity) * 100))
-        if not status:
-            return BattleResult.BATTLE_LOST
-
-        player.ui.tell(f"Current seaworthiness: {player.ship.damage_str}")
-
+    def populate_screen(self):
         for i in range(10):
-            if num_ships > num_on_screen:
-                player.ui.sleep(0.1)
-                ships_on_screen[i] = int(player.ec * random.random() + 20)
-                player.ui.draw_ships(ships_on_screen)
-                num_on_screen += 1
+            if self.current_ships > self.num_on_screen:
+                self.ships_on_screen[i] = int(self.player.ec * random.random() + 20)
+                self.num_on_screen += 1
 
-        order = get_orders(player, order)
+    def fight(self):
+        if self.player.ship.guns == 0:
+            self.ui.tell("We have no guns, Taipan!!", wait=True)
+            return
 
-        player.ui.stats(num_ships, player.ship.guns, order)
-        player.ui.draw_ships(ships_on_screen)
+        sunk = 0
+        self.ok = 3  # TODO what are these?
+        self.ik = 1
 
-        if num_ships > num_on_screen:
-            player.ui.plus()
-        else:
-            player.ui.plus(False)
+        self.ui.tell("Aye, we'll fight 'em, Taipan.", wait=True)
+        self.ui.tell("We're firing on 'em, Taipan!", wait=1)
 
-        if order is BattleOrders.FIGHT and player.ship.guns > 0:
-            sk = 0
-            ok = 3
-            ik = 1
-            player.ui.tell("Aye, we'll fight 'em, Taipan.", wait=True)
-            player.ui.tell("We're firing on 'em, Taipan!", wait=1)
+        for shot in range(self.ship.guns):
 
-            shots = player.ship.guns
-            while shots:
-                if all([ship == 0 for ship in ships_on_screen]):
-                    for j in range(10):
-                        if num_ships > num_on_screen:
-                            ships_on_screen[j] = int(player.ec * random.random() + 20)
-                            num_on_screen += 1
+            if all([ship == 0 for ship in self.ships_on_screen]):
+                self.populate_screen()
 
-                        player.ui.stats(num_ships, player.ship.guns, order)
-                        player.ui.draw_ships(ships_on_screen)
-
-                if num_ships > num_on_screen:
-                    player.ui.plus()
-                else:
-                    player.ui.plus(False)
-
-                while True:
-                    targeted = random.randint(0, 9)
-                    if ships_on_screen[targeted] != 0:
-                        break
-
-                player.ui.draw_hit(targeted)
-                player.ui.sleep(0.05)
-
-                shots -= 1
-                player.ui.tell(f'{shots} shot{"s" if shots != 1 else ""} remaining.', wait=1)
-                ships_on_screen[targeted] -= random.randint(0, 30) + 10
-                if ships_on_screen[targeted] <= 0:
-                    num_on_screen -= 1
-                    num_ships -= 1
-                    sk += 1
-                    ships_on_screen[targeted] = 0
-                    player.ui.wait(0.1)
-                    player.ui.sink_ship(targeted)
-
-                    player.ui.stats(num_ships, player.ship.guns, order)
-                    player.ui.draw_ships(ships_on_screen)
-                    if num_ships > num_on_screen:
-                        player.ui.plus()
-                    else:
-                        player.ui.plus(False)
-
-                if num_ships == 0:
+            while True:
+                targeted = random.randint(0, 9)
+                if self.ships_on_screen[targeted] != 0:
                     break
-                else:
-                    player.ui.wait(0.5)
 
-            if sk:
-                msg = f"Sunk {sk} of the buggers, Taipan!"
+            self.ui.ships.hit(targeted)
+
+            shots_remaining = self.ship.guns - 1 - shot
+            self.ui.tell(f'{shots_remaining} shot{"s" if shots_remaining != 1 else ""} remaining.', wait=1)
+
+            self.ships_on_screen[targeted] -= random.randint(0, 30) + 10
+            if self.ships_on_screen[targeted] <= 0:
+                self.num_on_screen -= 1
+                self.current_ships -= 1
+                sunk += 1
+                self.ships_on_screen[targeted] = 0
+
+                self.ui.ships.sink(targeted)
+                self.ui.update(self)
+
+            if self.current_ships == 0:
+                break
             else:
-                msg = "Hit 'em, but didn't sink 'em, Taipan!"
-            player.ui.tell(msg, wait=True)
+                self.ui.wait(0.5)
 
-            assert (s0 > 0)
-
-            if random.randint(0, s0) > (num_ships * 0.6 / (2 if li else 1)) and num_ships > 2:
-                divisor = int(num_ships / 3 / (2 if li else 1))
-                if 0 == divisor:
-                    divisor = 1
-                assert (divisor > 0)
-
-                ran = random.randint(0, divisor)
-                if ran == 0:
-                    ran = 1
-
-                num_ships -= ran
-
-                player.ui.stats(num_ships, player.ship.guns, order)
-                player.ui.draw_ships(ships_on_screen)
-                if num_ships > num_on_screen:
-                    player.ui.plus()
-                else:
-                    player.ui.plus(False)
-
-                player.ui.tell(f"{ran} ran away, Taipan!")
-
-                if num_ships <= 10:
-                    for i in range(10):
-                        if num_on_screen > num_ships and ships_on_screen[i] > 0:
-                            player.ui.clear_ship(i)
-                            player.ui.sleep(0.1)
-
-                    player.ui.stats(num_ships, player.ship.guns, order)
-                    player.ui.draw_ships(ships_on_screen)
-                    if num_ships > num_on_screen:
-                        player.ui.plus()
-                    else:
-                        player.ui.plus(False)
-
-                order = get_orders(player, order)
-
-        elif order is BattleOrders.FIGHT and player.ship.guns == 0:
-            player.ui.tell("We have no guns, Taipan!!", wait=True)
-
-        elif order is BattleOrders.THROW_CARGO:  # TODO This is all buggy
-            # TODO this should be reformatted to fit all info on line when throwing cargo
-            # player.ui.tell(string.goods_str(player.ship, "You have the following on board, Taipan:"))
-            good = ui.choose_good(player, "What shall I throw overboard, Taipan?", wild='*', prices=False)
-            if good != '*':
-                amount = player.ui.ask_num("How much, Taipan?")
-                if amount > player.ship[good] or player.ship[good] and amount == -1:
-                    amount = player.ship[good]
-                player.ship[good] -= amount
-            else:
-                amount = player.ship.used
-                for good in [goods.OPIUM, goods.SILK, goods.ARMS, goods.GENERAL]:
-                    player.ship[good] = 0
-            ok += int(amount / 10)
-            if amount:
-                player.ui.tell("Let's hope we lose 'em, Taipan!", wait=True)
-            else:
-                player.ui.tell("There's nothing there, Taipan!", wait=True)
-
-        if order in [BattleOrders.THROW_CARGO, BattleOrders.RUN]:
-            if order is BattleOrders.RUN:
-                player.ui.tell("Aye, we'll run, Taipan.", wait=True)
-
-            ik += 1
-            ok += ik
-
-            if random.randint(0, ok) > random.randint(0, num_ships):
-                player.ui.tell("We got away from 'em, Taipan!", wait=True)
-                num_ships = 0
-            else:
-                player.ui.tell("Couldn't lose 'em.", wait=True)
-                if num_ships > 2 and random.randint(0, 5) == 0:
-                    lost = random.randint(0, int(num_ships / 2)) + 1
-
-                    player.ui.stats(num_ships, player.ship.guns, order)
-                    player.ui.draw_ships(ships_on_screen)
-                    if num_ships > num_on_screen:
-                        player.ui.plus()
-                    else:
-                        player.ui.plus(False)
-
-                    player.ui.tell(f"But we escaped from {lost} of 'em!")
-
-                    if num_ships <= 10:
-                        for i in range(10):
-                            if num_on_screen > num_ships and ships_on_screen[i] > 0:
-                                player.ui.clear_ship(i)
-                                player.ui.sleep(0.1)
-
-                        player.ui.stats(num_ships, player.ship.guns, order)
-                        player.ui.draw_ships(ships_on_screen)
-                        if num_ships > num_on_screen:
-                            player.ui.plus()
-                        else:
-                            player.ui.plus(False)
-
-                    order = get_orders(player, order)
-
-        if num_ships > 0:
-            player.ui.tell("They're firing on us, Taipan!", wait=True)
-            player.ui.draw_incoming_fire()
-
-            player.ui.stats(num_ships, player.ship.guns, order)
-            player.ui.draw_ships(ships_on_screen)
-            if num_ships > num_on_screen:
-                player.ui.plus()
-            else:
-                player.ui.plus(False)
-
-            player.ui.tell("We've been hit, Taipan!!", wait=True)
-
-            i = max(15, num_ships)
-            if player.ship.guns > 0 and any([
-                random.randint(0, 100) < player.ship.damage / player.ship.capacity * 100,
-                player.ship.damage / player.ship.capacity * 100 > 80
-                   ]):
-                i = 1
-                player.ship.guns -= 1
-                player.ui.tell("The buggers hit a gun, Taipan!!", wait=True)
-
-                player.ui.stats(num_ships, player.ship.guns, order)
-                player.ui.draw_ships(ships_on_screen)
-                if num_ships > num_on_screen:
-                    player.ui.plus()
-                else:
-                    player.ui.plus(False)
-
-                order = get_orders(player, order)
-
-            player.ship.damage += player.ed * i * (2 if li else 1) * random.random() + i / 2
-
-            if not li and random.randint(0, 20):
-                return BattleResult.BATTLE_INTERRUPTED
-
-    if order == BattleOrders.FIGHT:
-        player.ui.stats(num_ships, player.ship.guns, order)
-        player.ui.draw_ships(ships_on_screen)
-        if num_ships > num_on_screen:
-            player.ui.plus()
+        if sunk:
+            self.ui.tell(f"Sunk {sunk} of the buggers, Taipan!", wait=True)
         else:
-            player.ui.plus(False)
+            self.ui.tell("Hit 'em, but didn't sink 'em, Taipan!", wait=True)
 
-        order = get_orders(player, order)
-        player.ui.tell("We got 'em all, Taipan!", wait=True)
-        return BattleResult.BATTLE_WON
-    else:
-        return BattleResult.BATTLE_FLED
+        assert (self.num_ships > 0)  # TODO why is this here
+
+        if random.randint(0, self.num_ships) > (self.current_ships * 0.6 / (2 if self.li else 1)) and self.current_ships > 2:
+            divisor = int(self.current_ships / 3 / (2 if self.li else 1))
+
+            if 0 == divisor:
+                divisor = 1
+            assert (divisor > 0)
+
+            ran = random.randint(0, divisor)
+            if ran == 0:
+                ran = 1
+
+            self.current_ships -= ran
+
+            if self.current_ships <= 10:
+                for i in range(10):
+                    if self.num_on_screen > self.current_ships and self.ships_on_screen[i] > 0:
+                        self.num_on_screen -= 1
+                        self.ui.ships.remove(i)
+
+            self.ui.tell(f"{ran} ran away, Taipan!")
+            self.ui.update(self)
+
+    def throw_cargo(self):
+        self.throw_cargo()
+        # TODO This is all buggy
+        # TODO this should be reformatted to fit all info on line when throwing cargo
+        prompt = string.goods_str(self.ship,
+                                  "You have the following on board, Taipan:"
+                                  ) + "What shall I throw overboard, Taipan?"
+        good = self.ui.choose_good(prompt, wild='*', prices=False)
+
+        if good != '*':
+            amount = self.ui.ask_num("How much, Taipan?")
+            if amount > self.ship[good] or self.ship[good] > 0 and amount == -1:
+                amount = self.ship[good]
+            self.ship[good] -= amount
+        else:
+            amount = self.ship.used
+            for good in self.ship.goods:
+                self.ship[good] = 0
+
+        self.ok += int(amount / 10)
+        if amount:
+            self.ui.tell("Let's hope we lose 'em, Taipan!", wait=True)
+        else:
+            self.ui.tell("There's nothing there, Taipan!", wait=True)
+
+    def run(self):
+        self.ik += 1
+        self.ok += self.ik
+
+        if random.randint(0, self.ok) > random.randint(0, self.current_ships):
+            self.ui.tell("We got away from 'em, Taipan!", wait=True)
+            self.current_ships = 0
+        else:
+            self.ui.tell("Couldn't lose 'em.", wait=True)
+            if self.current_ships > 2 and random.randint(0, 5) == 0:
+                lost = random.randint(0, int(self.current_ships / 2)) + 1
+
+                self.ui.update(self)
+
+                self.ui.tell(f"But we escaped from {lost} of 'em!")
+
+                self.populate_screen()
+                self.ui.update(self)
+
+    def enemy_phase(self):
+        self.ui.tell("They're firing on us, Taipan!", wait=True)
+
+        self.ui.draw_incoming_fire()
+        self.ui.update(self)
+
+        self.ui.tell("We've been hit, Taipan!!", wait=True)
+
+        i = max(15, self.current_ships)
+        if self.ship.guns > 0 and any([
+            random.randint(0, 100) < self.ship.damage / self.ship.capacity * 100,
+            self.ship.damage / self.ship.capacity * 100 > 80
+        ]):
+            i = 1
+            self.ship.guns -= 1
+            self.ui.tell("The buggers hit a gun, Taipan!!", wait=True)
+
+            self.ui.update(self)
+
+        self.ship.damage += self.player.ed * i * (2 if self.li else 1) * random.random() + i / 2
+
+        if not self.li and random.randint(0, 20):
+            self.result = BattleResult.BATTLE_INTERRUPTED
+
+    def do(self):
+        self.populate_screen()
+        self.ui.update(self)
+
+        while self.current_ships and self.result is BattleResult.BATTLE_NOT_FINISHED:
+            assert(self.player.ship.capacity >= 0)  # TODO why is this here?
+            if not self.status:
+                self.result = BattleResult.BATTLE_LOST
+
+            self.ui.tell(f"Current seaworthiness: {self.player.ship.damage_str}")
+
+            self.populate_screen()
+            self.ui.update(self)
+
+            self.get_orders()
+            self.ui.update(self)
+
+            if self.orders is BattleOrders.FIGHT:
+                self.fight()
+            elif self.orders is BattleOrders.THROW_CARGO:
+                self.throw_cargo()
+            elif self.orders is BattleOrders.RUN:
+                self.ui.tell("Aye, we'll run, Taipan.", wait=True)
+
+            if self.current_ships > 0:
+                self.enemy_phase()
+
+        self.conclude()
+        return self.result
+
+    def conclude(self):
+        if self.orders is BattleOrders.FIGHT:
+            self.ui.update(self)
+            self.ui.tell("We got 'em all, Taipan!", wait=True)
+            self.result = BattleResult.BATTLE_WON
+        else:
+            self.result = BattleResult.BATTLE_FLED
+
+        self.ui.switch()
 
 
 # class SeaBattle(Event):

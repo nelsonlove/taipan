@@ -1,25 +1,24 @@
+import random
 from datetime import date
 
-import goods
+from enums import Goods
 
 
-def comma_list(l):
-    return ', '.join(l[:-1]) + ', or ' + l[-1]
+def comma_list(str_list, conjunction='or'):
+    return ', '.join(str_list[:-1]) + f', {conjunction} ' + str_list[-1]
 
 
 def goods_str(goods_obj, string='Taipan, present prices per unit here are:'):
-    price_str = ("{on:<8}: {o:<11}{sn:<8}: {s:<11}\n"
-                 "{an:<8}: {a:<11}{gn:<8}: {g:<11}\n")
-    return str(string + '\n' if string else '') + price_str.format(
-        on='Opium',
-        o=goods_obj[goods.OPIUM],
-        sn='Silk',
-        s=goods_obj[goods.SILK],
-        an='Arms',
-        a=goods_obj[goods.ARMS],
-        gn='General',
-        g=goods_obj[goods.GENERAL]
-    )
+    good_str = '{g:<8}: {p:<11}'
+    goods = [good for good in Goods]
+    goods_tuples = tuple(goods[x:x + 2] for x in range(0, len(Goods), 2))
+
+    price_str = ''
+    for gt in goods_tuples:
+        for good in gt:
+            price_str += good_str.format(g=good.shortname, p=goods_obj[good])
+        price_str += '\n'
+    return str(string + '\n' if string else '') + price_str
 
 
 def date_str(months):

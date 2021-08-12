@@ -2,10 +2,8 @@ import random
 
 import action
 import event
-import ports
 import string
-import ui
-from orders import PortOrders
+from enums import PortOrders, Ports, Goods
 from player import Player
 import ui
 
@@ -15,12 +13,12 @@ class Game:
         self.debug = debug
         self.running = True
         self.player = None
-        self.ui = ui.StartupUI()
+        self.ui = None
 
     def run(self):
         """Main loop"""
         if not self.debug:
-            self.ui.splash()
+            ui.splash()
 
         while True:
             self.start()
@@ -43,8 +41,8 @@ class Game:
             start_with_debt = True
 
         else:
-            firm_name = self.ui.ask_firm_name()
-            start_with_debt = self.ui.ask_start_with_debt()
+            firm_name = ui.firm_name()
+            start_with_debt = ui.start_with_debt()
 
         player = Player(self, firm_name)
 
@@ -63,81 +61,70 @@ class Game:
             player.ship.guns = 5
             player.ship.capacity = 100
 
+        player.warehouse.goods = {good: 0 for good in Goods}
+        player.ship.goods = {good: 0 for good in Goods}
+
         self.player = player
 
     def try_event(self, func):
         if self.running:
             func(self.player)
 
-    def check_events(self, player):
-        if player.port is ports.HONG_KONG:
-            if player.li_timer == 0 and player.cash > 0:
-                self.try_event(event.li)
-
-            if player.ship.damage:
-                self.try_event(action.mchenry)
-
-            if player.debt >= 10000 and not player.wu_warned:
-                self.try_event(event.wu_warning)
-
-                self.try_event(action.wu)
-
-        if random.randint(0, 4) == 0:
-            if random.randint(0, 2) == 0:
-                self.try_event(event.new_ship)
-            elif player.ship.guns < 1000:
-                self.try_event(event.new_gun)
-
-        if player.port is not ports.HONG_KONG and random.randint(0, 18) == 0 and player.ship.opium > 0:
-            self.try_event(event.opium_seizure)
-
-        if random.randint(0, 50) == 0 and player.warehouse.used:
-            self.try_event(event.warehouse_theft)
-
-        if random.randint(0, 20) == 0:
-            if player.li_timer > 0:
-                player.li_timer += 1
-            if player.li_timer == 4:
-                player.li_timer = 0
-
-        if player.port is not ports.HONG_KONG and player.li_timer == 0 and random.randint(0, 4) != 0:
-            self.try_event(event.li_messenger)
-
-        if random.randint(0, 9) == 0:
-            self.try_event(event.good_prices)
-
-        if player.cash > 25000 and random.randint(0, 20) == 0:
-            self.try_event(event.mugging)
+    def check_events(self, *event_list):
+        for event_cls in event_list:
+            e = event_cls(self)
+            if self.debug or random.random() <= e.base_rate and e.condition(self.player):
+                result = e.do(self.player)
+                self.ui.update()
+                if not result:
+                    return False
+        return True
 
     def do_turn(self):
         """Runs one turn in the game"""
-        self.ui = ui.PortUI()
-        self.ui.stats(self.player)
-        self.check_events(self.player)
+
+        # Land phase
+
+        for good in Goods:
+            self.player.port.update_price(good)
+
+        self.ui = ui.CompradorUI(self)
+        self.ui.update()
+
+        if not self.check_events(
+            event.VisitLi,
+            event.McHenry,
+            event.WuWarning,
+            event.VisitWu,
+            event.Cutthroats,
+            event.NewShip,
+            event.NewGun,
+            event.OpiumSeizure,
+            event.WarehouseTheft,
+            event.LiWaits,
+            event.LiMessenger,
+            event.GoodPrices,
+            event.Mugging
+        ):
+            return self.end()
+
         self.port_actions(self.player)
 
-        if not self.running:
-            return
+        # Sea phase
 
         while True:
-            port = ui.choose_port(self.player)
+            port = self.ui.choose_port()
             if port is self.player.port:
                 self.ui.tell("You're already here, Taipan.", wait=5)
                 continue
             self.player.port = port
             break
 
-        # TODO Switch to "Captain's Report" screen here
-
-        # if random.randint(0, self.player.bp) == 0:
-        self.try_event(event.battle)
-
-        # if random.randint(0, 10) == 0:
-        #     event.storm(self.player)
-        self.try_event(event.storm)
-
-        if not self.running:
-            return
+        if not self.check_events(
+            event.Encounter,
+            event.Storm,
+        ):
+            return self.end()
 
         self.player.months += 1
         self.player.ec += 10
@@ -146,13 +133,11 @@ class Game:
         self.player.debt = int(self.player.debt * 1.1)
         self.player.savings = int(self.player.savings * 1.005)
 
-        self.player.port.update_prices()
-
-        self.player.ui.tell(f"Arriving at {self.player.port.name}...", wait=True)
+        self.player.ui.tell(f"Arriving at {self.player.port}...", wait=True)
 
     def port_actions(self, player):
         choices = [PortOrders.BUY, PortOrders.SELL]
-        if player.port is ports.HONG_KONG:
+        if player.port is Ports.HONG_KONG:
             choices += [PortOrders.VISIT_BANK, PortOrders.TRANSFER_CARGO]
 
         if self.debug or player.cash + player.savings >= 1000000:
@@ -163,7 +148,7 @@ class Game:
         order = None
 
         while self.running and order != PortOrders.QUIT_TRADING:
-            player.ui.stats(player)
+            self.ui.update()
 
             order = self.ui.ask_orders(string.goods_str(player.port) + "\nShall I {}?", choices)
 
@@ -177,7 +162,7 @@ class Game:
                 action.transfer(player)
             elif order == PortOrders.RETIRE:
                 player.ui.tell("You're a  M I L L I O N A I R E !", wait=True)
-                player.game.end()
+                return self.end()
             elif order == PortOrders.END_GAME:
                 quit()
             elif player.ship.free < 0:

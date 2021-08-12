@@ -1,10 +1,10 @@
-import ports
-from abstract import GameObject, Storage
+from abstract import GameObject, StorageObject
+from enums import Ports
 
 
-class Ship(Storage):
-    def __init__(self, game):
-        super().__init__(game, capacity=60)
+class Ship(StorageObject):
+    def __init__(self):
+        super().__init__(60)
         self.damage = 0
         self.guns = 0
 
@@ -25,9 +25,9 @@ class Player(GameObject):
     def __init__(self, game, firm_name, start_with_debt=False):
         super().__init__(game)
         self.firm = firm_name
-        self.port = ports.HONG_KONG
-        self.ship = Ship(game)
-        self.warehouse = Storage(game, 10000)
+        self.port = Ports.home()
+        self.ship = Ship()
+        self.warehouse = StorageObject(10000)
         self.cash = 0
         self.savings = 0
 
@@ -44,4 +44,6 @@ class Player(GameObject):
         self.bp = 7  # Likelihood of pirates?
         self.ec = 20  # Base health of enemies; grows over time.
         self.ed = 0.5  # Damage dealt by enemies; grows over time.
+
+        self.at_sea = False
 

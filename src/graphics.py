@@ -1,20 +1,16 @@
-import blessed
-
-term = blessed.Terminal()
-
-logo = term.yellow + """
+logo = """
  _____  _    ___ ____   _    _   _ 
-|_   _|/ \  |_ _|  _ \ / \  | \ | |
-  | | / _ \  | || |_) / _ \ |  \| |
-  | |/ ___ \ | ||  __/ ___ \| |\  |
-  |_/_/   \_\___|_| /_/   \_\_| \_|
-""".strip('\n')
+|_   _|/ \\  |_ _|  _ \\ / \\  | \\ | |
+  | | / _ \\  | || |_) / _ \\ |  \\| |
+  | |/ ___ \\ | ||  __/ ___ \\| |\\  |
+  |_/_/   \\_\\___|_| /_/   \\_\\_| \\_|
+"""
 
-tagline = term.white + "A game based on the China trade of the 1800s"
+tagline = "A game based on the China trade of the 1800s"
 
-pennant = term.red + "~~"
+pennant = "~~"
 
-sail = term.white + """
+sail = """
                ,
         , `-._/ 
       .'     /  \\
@@ -24,9 +20,9 @@ sail = term.white + """
   |                \\
  /              __  \\
 `-------- `---    `"-``
-""".strip('\n')
+"""
 
-boat = term.tan2 + """
+boat = """
         |
         |     |
         |    ||
@@ -36,16 +32,16 @@ boat = term.tan2 + """
         ||   ||
         ||   ||
         |    ||
-\~~~~~~~'~~~~'~~~~/~~``
+\\~~~~~~~'~~~~'~~~~/~~``
  `--------------'~
-""".strip('\n')
+"""
 
-water = term.blue + """
+water = """
 ~^~_-~^~=~^~~^=                     ~^=~^~-~^~_~^~=
  ~=~^~ _~^~ =~                          ~~^~ =_~^=
 ~ ~^~=~^_~^~ =~                         ~=~^~ ~^=
  ~^=~^~_~-=~^~ ^                 ~^~=~^~_~^=~^~=~
-""".strip('\n')
+"""
 
 credits = """
 ====================
@@ -72,27 +68,73 @@ credits = """
  nelson@nelson.love
 
 ====================
-""".strip('\n')
+"""
 
 press_any_key = "Press any key to start."
 
+firm_name = """
+┌───────────────────────────────────────┐
+│                                       │
+│     Taipan,                           │
+│                                       │
+│ What will you name your               │
+│                                       │
+│     Firm:                             │
+│                                       │
+└───────────────────────────────────────┘
+"""
+
+start_with_debt = """
+Do you want to start . . .     
+
+  1) With cash (and a debt)    
+  
+                >> or <<       
+                
+  2) With five guns and no cash
+                (But no debt!) 
+                               
+          ?                    
+"""
+
 empty = """
-         
-                 
-                 
-                 
-""".strip('\n')
+        
+        
+        
+        
+"""
 
 blast = """
 ********
 ********
 ********
 ********
-""".strip('\n')
+"""
 
 ship = """
 -|-_|_  
 -|-_|_  
 _|__|__/
 \\_____/ 
-""".strip('\n')
+"""
+
+sink1 = """
+        
+-|-_|_  
+-|-_|_  
+_|__|__/
+"""
+
+sink2 = """
+        
+        
+-|-_|_  
+-|-_|_  
+"""
+
+sink3 = """
+        
+        
+        
+-|-_|_    
+"""
