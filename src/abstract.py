@@ -1,6 +1,4 @@
 import abc
-import enum
-
 
 import enum
 import random
@@ -74,6 +72,7 @@ class PortEnum(SelectableEnum):
 
 class GameObject:
     """Generic class giving access to game"""
+
     def __init__(self, game):
         self.game = game
 

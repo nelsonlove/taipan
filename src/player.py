@@ -22,7 +22,7 @@ class Ship(StorageObject):
 
 
 class Player(GameObject):
-    def __init__(self, game, firm_name, start_with_debt=False):
+    def __init__(self, game, firm_name):
         super().__init__(game)
         self.firm = firm_name
         self.port = Ports.home()

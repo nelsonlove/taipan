@@ -52,7 +52,8 @@ class McHenry(Event):
         repair_price = int(base_rate * player.ship.damage + 1)
 
         repair_amount = player.ui.ask_num(
-            f"Och, 'tis a pity to be {damage_percent:.0%} damaged. We can fix yer whole ship for {repair_price}, or make partial repairs if you wish. How much will ye spend?")
+            f"Och, 'tis a pity to be {damage_percent:.0%} damaged. We can fix yer whole ship for {repair_price}, or "
+            f"make partial repairs if you wish. How much will ye spend?")
 
         if repair_amount > player.cash:
             player.ui.tell("Taipan, you do not have enough cash!!", wait=True)

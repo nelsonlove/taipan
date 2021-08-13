@@ -1,4 +1,3 @@
-import random
 from datetime import date
 
 from enums import Goods

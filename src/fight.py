@@ -3,11 +3,9 @@ from enum import Enum, auto
 
 from blessed import Terminal
 
-
 import string
-from enums import BattleOrders
-import ui
 from abstract import GameObject
+from enums import BattleOrders
 
 term = Terminal()
 
@@ -116,7 +114,9 @@ class Battle(GameObject):
 
         assert (self.num_ships > 0)  # TODO this assert statement seems unnecessary
 
-        if random.randint(0, self.num_ships) > (self.current_ships * 0.6 / (2 if self.li else 1)) and self.current_ships > 2:
+        if self.current_ships > 2 and (
+                random.randint(0, self.num_ships) > (self.current_ships * 0.6 / (2 if self.li else 1))
+        ):
             divisor = int(self.current_ships / 3 / (2 if self.li else 1))
 
             if 0 == divisor:
@@ -210,7 +210,7 @@ class Battle(GameObject):
         self.ui.update(self)
 
         while self.current_ships and self.result is BattleResult.BATTLE_NOT_FINISHED:
-            assert(self.player.ship.capacity >= 0)  # TODO this assert statement seems unnecessary
+            assert (self.player.ship.capacity >= 0)  # TODO this assert statement seems unnecessary
             if not self.status:
                 self.result = BattleResult.BATTLE_LOST
 

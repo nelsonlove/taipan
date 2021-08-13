@@ -1,4 +1,3 @@
-import random
 from textwrap import wrap
 
 import blessed
@@ -208,6 +207,11 @@ class StaticUIObject(UIObject):
         super().__init__(x1, y1, x2, y2, border=False, ignore_space=ignore_space, **kwargs)
         self.lines = lines
 
+    def animate(self, *gfx, delay=0.1):
+        for graphic in gfx:
+            self.graphic = graphic
+            self.sleep(delay)
+
     @property
     def graphic(self):
         return '\n'.join(self.lines)
@@ -317,7 +321,7 @@ def splash():
         StaticUIObject(18, 10, graphics.sail, term.white),
         StaticUIObject(18, 10, graphics.boat, term.tan2),
         StaticUIObject(18, 22, graphics.press_any_key, term.normal),
-        StaticUIObject(56, 0, graphics.credits, term.normal)
+        StaticUIObject(56, 0, graphics.credit, term.normal)
     ]:
         graphic.update()
     get_char()
@@ -456,22 +460,15 @@ class Ships(UIObject):
         self.ships[position].graphic = graphics.ship
 
     def hit(self, position):
-        self.ships[position].graphic = graphics.blast
-        self.sleep(0.1)
-        self.ships[position].graphic = graphics.ship
-        self.sleep(0.1)
-        self.ships[position].graphic = graphics.blast
-        self.sleep(0.1)
-        self.ships[position].graphic = graphics.ship
-        self.sleep(0.05)
+        self.ships[position].animate(graphics.blast,
+                                     graphics.ship,
+                                     graphics.blast,
+                                     graphics.ship)
 
     def sink(self, position):
-        self.ships[position].graphic = graphics.sink1
-        self.sleep(0.1)
-        self.ships[position].graphic = graphics.sink2
-        self.sleep(0.1)
-        self.ships[position].graphic = graphics.sink3
-        self.sleep(0.1)
+        self.ships[position].animate(graphics.sink1,
+                                     graphics.sink2,
+                                     graphics.sink3)
         self.remove(position)
 
 

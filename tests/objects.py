@@ -1,7 +1,7 @@
 import random
 
 from player import Player
-from enums import Goods, Ports
+from enums import Goods
 
 
 goods_test_obj = dict(((good, good.random_price(random.randint(10, 16))) for good in Goods))
