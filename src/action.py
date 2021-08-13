@@ -7,7 +7,7 @@ def buy(player):
     while True:
         max_purchase = int(player.cash / player.port[good])
 
-        #  TODO max_purchase shows up in a little box
+        #  TODO max_purchase is supposed to show up in a little box
         amount = player.ui.ask_num(f"{string.goods_str(player.port)}\nYou can afford {max_purchase}. How much "
                                    f"{good} shall I buy, Taipan?")
 
