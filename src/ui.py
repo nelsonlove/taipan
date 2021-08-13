@@ -248,18 +248,19 @@ class InteractiveUI(UIObject, GameObject):
         elif wait:
             self.wait(wait)
 
-    def ask(self, prompt='', validate=None, **kwargs):  # TODO cursor needs to be spaced properly
+    def ask(self, prompt='', validate=None, **kwargs):  # TODO is anything using kwargs here?
         self.tell(prompt + ' ')
 
         while True:
             result = get_str(**kwargs)
-            if not validate or validate(result):
+            if not validate or validate(result):  # TODO is anything using this?
                 return result
 
-    def ask_num(self, prompt, max_length=8):  # TODO needs support for negative numbers
+    #  TODO this should take a 'max' argument and return it if 'A' is entered
+    def ask_num(self, prompt, max_length=8):
         num_str = self.ask(prompt,
                            allowed=lambda c: str(c).isdigit(),
-                           max_length=max_length)  # TODO kwargs needed here?
+                           max_length=max_length)
         return int(num_str)
 
     def ask_orders(self, prompt, orders_list, other=None):
@@ -301,6 +302,7 @@ class GameUI(InteractiveUI):
         super().__init__(game)
         self.messages = None
 
+    # TODO "Comprador's Report" / "Captain's Report" should prefix some messages
     def tell(self, message, **kwargs):
         self.messages.tell(message, **kwargs)
 
@@ -399,7 +401,7 @@ class CompradorUI(GameUI):
             bank=player.savings
         ))
 
-    def tell(self, *args, **kwargs):  # TODO comprador report
+    def tell(self, *args, **kwargs):
         super().tell(*args, **kwargs)
 
     def switch(self):

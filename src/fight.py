@@ -73,7 +73,7 @@ class Battle(GameObject):
             return
 
         sunk = 0
-        self.ok = 3  # TODO what are these?
+        self.ok = 3  # TODO these attributes need explanation
         self.ik = 1
 
         self.ui.tell("Aye, we'll fight 'em, Taipan.", wait=True)
@@ -114,7 +114,7 @@ class Battle(GameObject):
         else:
             self.ui.tell("Hit 'em, but didn't sink 'em, Taipan!", wait=True)
 
-        assert (self.num_ships > 0)  # TODO why is this here
+        assert (self.num_ships > 0)  # TODO this assert statement seems unnecessary
 
         if random.randint(0, self.num_ships) > (self.current_ships * 0.6 / (2 if self.li else 1)) and self.current_ships > 2:
             divisor = int(self.current_ships / 3 / (2 if self.li else 1))
@@ -138,10 +138,9 @@ class Battle(GameObject):
             self.ui.tell(f"{ran} ran away, Taipan!")
             self.ui.update(self)
 
+    # TODO make sure this displays as expected
     def throw_cargo(self):
         self.throw_cargo()
-        # TODO This is all buggy
-        # TODO this should be reformatted to fit all info on line when throwing cargo
         prompt = string.goods_str(self.ship,
                                   "You have the following on board, Taipan:"
                                   ) + "What shall I throw overboard, Taipan?"
@@ -211,7 +210,7 @@ class Battle(GameObject):
         self.ui.update(self)
 
         while self.current_ships and self.result is BattleResult.BATTLE_NOT_FINISHED:
-            assert(self.player.ship.capacity >= 0)  # TODO why is this here?
+            assert(self.player.ship.capacity >= 0)  # TODO this assert statement seems unnecessary
             if not self.status:
                 self.result = BattleResult.BATTLE_LOST
 
@@ -245,156 +244,3 @@ class Battle(GameObject):
             self.result = BattleResult.BATTLE_FLED
 
         self.ui.switch()
-
-
-# class SeaBattle(Event):
-#     def battle_lost(self):
-#         pass
-#
-#     def draw_stats(self):
-
-#
-
-#
-#         guns = self.game.ship.guns
-
-#
-#     def draw_ships(self):
-#         pass
-#         # x = 10;
-#         # y = 6;
-#         # for (i = 0; i <= 9; i++)
-#         # {
-#         #     if (i == 5)
-#         #     {
-#         #         x = 10;
-#         #         y = 12;
-#         #     }
-#         #
-#         #     if (num_ships > num_on_screen)
-#         #     {
-#         #         if (ships_on_screen[i] == 0)
-#         #         {
-#         #             usleep(100000);
-#         #             ships_on_screen[i] =
-#         #                 (int)((ec * ((float) rand() / RAND_MAX)) + 20);
-#         #             draw_lorcha(x, y);
-#         #             num_on_screen++;
-#         #             refresh();
-#         #         }
-#         #
-#         #         x += 10;
-#         #     }
-#         # }
-#         #
-#         # if (num_ships > num_on_screen)
-#         # {
-#         #     move(11, 62);
-#         #     printw("+");
-#         # } else {
-#         #     move(11, 62);
-#         #     printw(" ");
-#         # }
-#         #
-#         # move(16, 0);
-#         # printw("\n");
-#         # refresh();
-#         # timeout(3000);
-#
-#     def update_ui(self):
-#         self.draw_ships()
-#         self.draw_stats()
-#
-#     def draw_ship(self, x, y):
-#         pass
-#
-
-#
-#     def fight(self):
-#         sk = 0
-#         ok = 3
-#         ik = 1
-#         targeted = None
-#         # {
-#         #     int
-#         # targeted, \
-#         # sk = 0;
-#         # ok = 3;
-#         # ik = 1;
-#
-#         self.ui.report("Aye, we'll fight 'em, Taipan.", wait=True)
-#         # move(3, 0);
-#         # clrtoeol();
-#         # printw("Aye, we'll fight 'em, Taipan.");
-#         # refresh();
-#         # timeout(3000);
-#         # input = getch();
-#         # timeout(-1);
-#
-#         self.ui.report("We're firing on 'em, Taipan!", wait=True)
-#         # move(3, 0);
-#         # clrtoeol();
-#         # printw("We're firing on 'em, Taipan!");
-#         # timeout(1000);
-#         # input = getch();
-#         # timeout(-1);
-#         # refresh();
-#
-#         shots = self.ship.guns
-#
-#         while shots:
-#             if all([ship == 0 for ship in self.ships_on_screen]):
-#             # int j;
-#                 x = 10
-#                 y = 6
-#                 # x = 10;
-#                 # y = 6;
-#
-#                 for j in range(10):
-#                 # for (j = 0; j <= 9; j++)
-#                     # {
-#                     if j == 5:
-#                     # if (j == 5)
-#                     # {
-#                         x = 10
-#                         y = 12
-#                     # x = 10;
-#                     # y = 12;
-#                     # }
-#                     #
-#                     if self.num_ships > self.num_on_screen:
-#                         if self.ships_on_screen[j] == 0:
-#                             self.ui.sleep(0.1)
-#                             self.ships_on_screen[j] = self.game.ec * random.random() + 20
-#                             self.ui.draw_ship(j)
-#                             self.num_on_screen += 1
-#                     if self.num_ships > self.num_on_screen:
-#                         pass # draw plus
-#
-#             targeted = random.randint(0, 10)
-#             while self.ships_on_screen[targeted] == 0:
-#                 targeted = random.randint(0, 10)
-#
-#             self.ui.draw_cannon_blast(targeted)
-#             shots -= 1
-#             self.ui.report(f'{shots} shot{"s" if shots == 1 else ""} remaining.')
-#             self.ui.wait(0.1)
-#             self.ships_on_screen[targeted] -= random.randint(0, 30) + 10
-#             if self.ships_on_screen[targeted] <= 0:
-#                 self.num_on_screen -= 1
-#                 self.num_ships -= 1
-#                 sk += 1
-#                 self.ships_on_screen[targeted] = 0
-#                 self.ui.wait(0.1)
-#                 self.ui.sink_ship(targeted)
-#                 if self.num_ships == self.num_on_screen:
-#                     pass # get rid of the plus
-#
-#                 # update stats
-#
-#             if self.num_ships == 0:
-#                 break
-#             else:
-#                 self.ui.sleep(0.5)
-
-

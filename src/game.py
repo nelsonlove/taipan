@@ -170,6 +170,7 @@ class Game:
             else:
                 break
 
+    # TODO most of this code should go into a separate UI/view class
     def end(self):
         """Displays final stats"""
         self.running = False
@@ -188,7 +189,7 @@ class Game:
 
         score = cash / 100 / max(1, self.player.months)
 
-        self.ui.tell(f"Your score is {cash}")  # TODO needs to be reversed
+        self.ui.tell(f"Your score is {cash}")  # TODO the score should be set in term.reverse
 
         if score < 0:
             self.ui.tell("The crew has requested that you stay on shore for their safety!!")
@@ -196,7 +197,7 @@ class Game:
             self.ui.tell("Have you considered a land based job?")
 
         self.ui.tell("Your Rating:")
-        self.ui.tell("_______________________________")  # TODO ratings need to be reversed too
+        self.ui.tell("_______________________________")
 
         ratings = [
             (50000, "Ma Tsu", "50,000 and over"),

@@ -76,7 +76,6 @@ class WuWarning(Event):
     def do(self, player):
         braves = random.randint(0, 100) + 50
 
-        # TODO comprador's report
         player.ui.tell(f"Elder Brother Wu has sent {braves} braves to escort you to the Wu mansion, Taipan.", wait=True)
 
         player.ui.tell(
@@ -119,7 +118,6 @@ class VisitWu(Event):
         elif player.cash and player.debt:
             while True:
                 repay_amount = player.ui.ask_num("How much do you wish to repay him?")
-                #  TODO need to get it working with -1
                 if repay_amount == -1:
                     repay_amount = player.cash if player.cash <= player.debt else player.debt
 
@@ -157,8 +155,7 @@ class Cutthroats(Event):
         return player.debt > 20000 and player.cash > 0
 
     def do(self, player):
-        player.cash = 0  # TODO this won't update until after the event, there should be a hook when one of the values
-        # is changed
+        player.cash = 0
         player.ui.tell(
             f"Bad joss!! {random.randint(0, 3) + 1} of your bodyguards have been killed by cutthroats and you "
             f"have been robbed of all of your cash, Taipan!!", wait=5)
@@ -198,7 +195,7 @@ class NewShip(Event):
     def do(self, player):
         if player.ui.yes_or_no(f"Do you wish to trade in your {'damaged' if player.ship.damage else 'fine'} ship for "
                                f"one with 50 more capacity by paying an additional {self.cost}, Taipan?"
-                               ):  # TODO make this reversed on damage
+                               ):  # TODO 'damaged' should be set in term.reverse if part of message
             player.cash -= self.cost
             player.ship.capacity += 50
             player.ship.damage = 0
@@ -263,7 +260,7 @@ class GoodPrices(Event):
     base_rate = 0.1
 
     def do(self, player):
-        good = random.choice(list(Goods))  # TODO Will this work?
+        good = random.choice(list(Goods))
         current_price = player.port[good]
 
         if random.randint(0, 2) == 0:
@@ -286,7 +283,8 @@ class Mugging(Event):
 
     def do(self, player):
         amount = int((player.cash / 1.4) * random.random())
-        player.cash -= amount  # TODO Again this won't update in time...maybe that's okay?
+        player.cash -= amount
+        player.ui.update()
         player.ui.tell(f"Bad Joss!! You've been beaten up and robbed of {amount} in cash, Taipan!!", wait=5)
         return True
 
@@ -321,7 +319,7 @@ class Encounter(Event):
         result = Battle(self.game, num_ships).do()
 
         if result is BattleResult.BATTLE_INTERRUPTED:
-            player.ui.update()  # TODO put in a thing if at sea
+            player.ui.update()  # TODO 'Location' in UI should read 'At sea' here
             player.ui.tell("Li Yuen's fleet drove them off!", wait=True)
 
         if any([result is BattleResult.BATTLE_INTERRUPTED,
@@ -343,7 +341,7 @@ class Encounter(Event):
 
         if result is not BattleResult.BATTLE_NOT_FINISHED:
 
-            player.ui.update()  # TODO put in a thing for at-sea
+            player.ui.update()  # TODO 'Location' in UI should read 'At sea' here
 
             if result is BattleResult.BATTLE_WON:
                 booty = int((player.months / 4 * 1000 * num_ships) + random.randint(0, 1000) + 250)
