@@ -6,7 +6,7 @@ from game import Game
 term = blessed.Terminal()
 
 
-def main(debug=True):
+def main(debug=False):
     with term.fullscreen():
         game = Game(debug)
         game.run()
