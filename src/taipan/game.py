@@ -14,25 +14,26 @@ class Game:
         self.running = True
         self.player = None
         self.ui = None
-        self.goods = list(Goods.__members__.values())
+        self.goods = list(Goods.__members__.values())  # kludgey tbh
 
-    def run(self):
+    def run(self, *args, **kwargs):
         """Main loop"""
         if not self.debug:
             ui.splash()
 
         while True:
-            self.start()
+            self.start(*args, **kwargs)
 
             while self.running:
-                self.do_turn()
+                self.port_phase()
+                self.sea_phase()
 
             if self.ui.yes_or_no('Play again?'):
                 self.start()
             else:
                 break
 
-    def start(self):
+    def start(self, damage=None, cash=None, savings=None, guns=None, capacity=None):
         """Sets up new game"""
 
         self.running = True
@@ -45,36 +46,32 @@ class Game:
             firm_name = ui.firm_name()
             start_with_debt = ui.start_with_debt()
 
-        player = Player(self, firm_name)
+        self.player = Player(self, firm_name)
 
         if start_with_debt:
-            player.cash = 400
-            player.debt = 5000
-            player.bp = 10
+            self.player.cash = 400
+            self.player.debt = 5000
+            self.player.bp = 10
         else:
-            player.ship.guns = 5
-            player.li_timer = 1
+            self.player.ship.guns = 5
+            self.player.li_timer = 1
 
-        if self.debug:
-            player.ship.damage = 10
-            player.cash = 100000
-            player.savings = 1000000
-            player.ship.guns = 5
-            player.ship.capacity = 100
+        self.player.ship.damage = damage or self.player.ship.damage
+        self.player.cash = cash or self.player.cash
+        self.player.savings = savings or self.player.savings
+        self.player.ship.guns = guns or self.player.ship.guns
+        self.player.ship.capacity = capacity or self.player.ship.capacity
 
-        player.warehouse.goods = {good: 0 for good in Goods}
-        player.ship.goods = {good: 0 for good in Goods}
-
-        self.player = player
+        self.player.warehouse.goods = {good: 0 for good in Goods}
+        self.player.ship.goods = {good: 0 for good in Goods}
 
     def check_events(self, *event_list):
         for event_cls in event_list:
             e = event_cls(self)
 
             if not all([
-                e.condition(),
-                e.ask(),
                 self.debug or random.random() <= e.base_rate,
+                e.condition(),
             ]):
                 continue
 
@@ -86,14 +83,7 @@ class Game:
 
         return True
 
-    def do_turn(self):
-        """Runs one turn in the game"""
-
-        def comma_list(str_list, conjunction='or'):
-            return ', '.join(str_list[:-1]) + f', {conjunction} ' + str_list[-1]
-
-        # Land phase
-
+    def port_phase(self):
         for good in Goods:
             self.player.port.update_price(good)
 
@@ -119,23 +109,14 @@ class Game:
 
         self.port_actions(self.player)
 
-        # Sea phase
-
-        port_str = comma_list([port.shortcut + ') ' + str(port) for port in Ports])
-
-        while True:
-            port = self.ui.ask_orders(f"Taipan, do you wish me to go to: {port_str} ?", Ports)
-            if port is not self.player.port:
-                self.player.port = port
-                break
-            else:
-                self.ui.tell("You're already here, Taipan.", wait=5)
+    def sea_phase(self):
+        self.player.port = action.choose_port(self.player)
 
         if not self.check_events(
                 event.HostileEncounter,
                 event.Storm,
         ):
-            return self.end()
+            return self.end()  # Taipan didn't make it
 
         self.player.months += 1
         self.player.ec += 10
@@ -148,6 +129,7 @@ class Game:
 
     def port_actions(self, player):
         choices = [PortOrders.BUY, PortOrders.SELL]
+
         if player.port is Ports.HONG_KONG:
             choices += [PortOrders.VISIT_BANK, PortOrders.TRANSFER_CARGO]
 
@@ -160,26 +142,32 @@ class Game:
 
         while self.running and order != PortOrders.QUIT_TRADING:
             self.ui.update()
-
             order = self.ui.ask_orders(strings.goods_str(player.port) + "\nShall I {}?", choices)
 
             if order == PortOrders.BUY:
                 action.buy(player)
+
             elif order == PortOrders.SELL:
                 action.sell(player)
+
             elif order == PortOrders.VISIT_BANK:
                 action.bank(player)
+
             elif order == PortOrders.TRANSFER_CARGO:
                 action.transfer(player)
+
             elif order == PortOrders.RETIRE:
                 player.ui.tell("You're a  M I L L I O N A I R E !", wait=True)
                 return self.end()
+
             elif order == PortOrders.END_GAME:
                 quit()
+
             elif player.ship.free < 0:
                 player.ui.tell("Your ship is overloaded, Taipan!!", wait=5)
+
             else:
-                break
+                return
 
     # TODO most of this code should go into a separate UI/view class
     def end(self):

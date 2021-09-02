@@ -110,9 +110,6 @@ class StorageObject:
 class Event(GameObject, metaclass=abc.ABCMeta):
     base_rate = 1
 
-    def ask(self):
-        return True
-
     def condition(self):
         return True
 
