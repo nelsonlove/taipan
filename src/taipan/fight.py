@@ -3,7 +3,7 @@ from enum import Enum, auto
 
 from blessed import Terminal
 
-import string
+import strings
 from abstract import GameObject
 from enums import BattleOrders
 
@@ -141,7 +141,7 @@ class Battle(GameObject):
     # TODO make sure this displays as expected
     def throw_cargo(self):
         self.throw_cargo()
-        prompt = string.goods_str(self.ship,
+        prompt = strings.goods_str(self.ship,
                                   "You have the following on board, Taipan:"
                                   ) + "What shall I throw overboard, Taipan?"
         good = self.ui.choose_good(prompt, wild='*', prices=False)

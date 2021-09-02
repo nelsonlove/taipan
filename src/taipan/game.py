@@ -2,7 +2,7 @@ import random
 
 import action
 import event
-import string
+import strings
 from enums import PortOrders, Ports, Goods
 from player import Player
 import ui
@@ -150,7 +150,7 @@ class Game:
         while self.running and order != PortOrders.QUIT_TRADING:
             self.ui.update()
 
-            order = self.ui.ask_orders(string.goods_str(player.port) + "\nShall I {}?", choices)
+            order = self.ui.ask_orders(strings.goods_str(player.port) + "\nShall I {}?", choices)
 
             if order == PortOrders.BUY:
                 action.buy(player)

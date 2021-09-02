@@ -1,4 +1,4 @@
-import string
+import strings
 
 
 def buy(player):
@@ -8,7 +8,7 @@ def buy(player):
         max_purchase = int(player.cash / player.port[good])
 
         #  TODO max_purchase is supposed to show up in a little box
-        amount = player.ui.ask_num(f"{string.goods_str(player.port)}\nYou can afford {max_purchase}. How much "
+        amount = player.ui.ask_num(f"{strings.goods_str(player.port)}\nYou can afford {max_purchase}. How much "
                                    f"{good} shall I buy, Taipan?")
 
         if amount == -1:
@@ -24,7 +24,7 @@ def buy(player):
 def sell(player):
     good = player.ui.choose_good(player, "What do you wish me to sell, Taipan?", player.port)
 
-    amount = player.ui.ask_num(f"{string.goods_str(player.port)}\nHow much {good} shall I sell, Taipan?")
+    amount = player.ui.ask_num(f"{strings.goods_str(player.port)}\nHow much {good} shall I sell, Taipan?")
 
     if amount == -1 or player.ship[good] >= amount:
         amount = player.ship[good]
