@@ -14,6 +14,7 @@ class Game:
         self.running = True
         self.player = None
         self.ui = None
+        self.goods = list(Goods.__members__.values())
 
     def run(self):
         """Main loop"""
@@ -82,6 +83,8 @@ class Game:
 
     def do_turn(self):
         """Runs one turn in the game"""
+        def comma_list(str_list, conjunction='or'):
+            return ', '.join(str_list[:-1]) + f', {conjunction} ' + str_list[-1]
 
         # Land phase
 
@@ -112,13 +115,15 @@ class Game:
 
         # Sea phase
 
+        port_str = comma_list([port.shortcut + ') ' + str(port) for port in Ports])
+
         while True:
-            port = self.ui.choose_port()
-            if port is self.player.port:
+            port = self.ui.ask_orders(f"Taipan, do you wish me to go to: {port_str} ?", Ports)
+            if port is not self.player.port:
+                self.player.port = port
+                break
+            else:
                 self.ui.tell("You're already here, Taipan.", wait=5)
-                continue
-            self.player.port = port
-            break
 
         if not self.check_events(
             event.Encounter,
@@ -211,7 +216,8 @@ class Game:
         for minimum, title, desc in ratings:
             rating_str = '{r:<13}   {d:>15}'.format(r=title, d=desc)
             if score <= minimum and not rating:
-                rating_str = ui.term.reverse + rating_str + ui.term.normal
+                # TODO refactoring this statement can wait until the whole method is refactored
+                # rating_str = taipan.ui.abstract.term.reverse + rating_str + taipan.ui.abstract.term.normal
                 rating = title
             self.ui.tell(rating_str)
 

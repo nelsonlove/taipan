@@ -1,10 +1,4 @@
-from datetime import date
-
 from enums import Goods
-
-
-def comma_list(str_list, conjunction='or'):
-    return ', '.join(str_list[:-1]) + f', {conjunction} ' + str_list[-1]
 
 
 def goods_str(goods_obj, string='Taipan, present prices per unit here are:'):
@@ -17,10 +11,3 @@ def goods_str(goods_obj, string='Taipan, present prices per unit here are:'):
             price_str += '{g:<8}: {p:<11}'.format(g=good.shortname, p=goods_obj[good])
         price_str += '\n'
     return str(string + '\n' if string else '') + price_str
-
-
-def date_str(months):
-    years = months // 12
-    months = months % 12
-    current_date = date(1860 + years, 1 + months, 15)
-    return current_date.strftime('%d %b %Y')

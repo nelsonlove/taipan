@@ -1,8 +1,16 @@
 import strings
 
 
+def choose_good(player, string, prices=None, wild=None):
+    prompt = strings.goods_str(prices) + '\n' + string if prices else string
+    choice = player.game.ui.ask_orders(prompt, player.game.goods, other=[wild] if wild else None)
+    if wild and choice == wild:
+        return wild
+    return choice
+
+
 def buy(player):
-    good = player.ui.choose_good("What do you wish me to buy, Taipan?", player.port)
+    good = choose_good(player, "What do you wish me to buy, Taipan?", player.port)
 
     while True:
         max_purchase = int(player.cash / player.port[good])
@@ -22,7 +30,7 @@ def buy(player):
 
 
 def sell(player):
-    good = player.ui.choose_good("What do you wish me to sell, Taipan?", player.port)
+    good = choose_good(player, "What do you wish me to sell, Taipan?", player.port)
 
     amount = player.ui.ask_num(f"{strings.goods_str(player.port)}\nHow much {good} shall I sell, Taipan?",
                                max_num=player.ship[good])

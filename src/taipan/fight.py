@@ -4,6 +4,7 @@ from enum import Enum, auto
 from blessed import Terminal
 
 import strings
+from action import choose_good
 from abstract import GameObject
 from enums import BattleOrders
 
@@ -144,7 +145,7 @@ class Battle(GameObject):
         prompt = strings.goods_str(self.ship,
                                    "You have the following on board, Taipan:"
                                    ) + "What shall I throw overboard, Taipan?"
-        good = self.ui.choose_good(prompt, wild='*', prices=False)
+        good = choose_good(self.player, prompt, wild='*', prices=False)
 
         if good != '*':
             amount = self.ui.ask_num("How much, Taipan?", max_amount=self.ship[good])
