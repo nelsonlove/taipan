@@ -5,7 +5,7 @@ import blessed
 import enums
 import graphics
 from abstract import GameObject
-from string import comma_list, goods_str, date_str
+from strings import comma_list, goods_str, date_str
 from time import sleep
 
 term = blessed.Terminal()
