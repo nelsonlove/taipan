@@ -1,4 +1,5 @@
 import strings
+from taipan.enums import Ports
 
 
 def choose_good(player, string, prices=None, wild=None):
@@ -7,6 +8,20 @@ def choose_good(player, string, prices=None, wild=None):
     if wild and choice == wild:
         return wild
     return choice
+
+
+def choose_port(player):
+    def comma_list(str_list, conjunction='or'):
+        return ', '.join(str_list[:-1]) + f', {conjunction} ' + str_list[-1]
+
+    port_str = comma_list([port.shortcut + ') ' + str(port) for port in Ports])
+
+    while True:
+        port = player.ui.ask_orders(f"Taipan, do you wish me to go to: {port_str} ?", Ports)
+        if port is not player.port:
+            return port
+        else:
+            player.ui.tell("You're already here, Taipan.", wait=5)
 
 
 def buy(player):
