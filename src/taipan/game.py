@@ -3,9 +3,9 @@ import random
 import action
 import event
 import strings
+import ui
 from enums import PortOrders, Ports, Goods
 from player import Player
-import ui
 
 
 class Game:
@@ -67,22 +67,28 @@ class Game:
 
         self.player = player
 
-    def try_event(self, func):
-        if self.running:
-            func(self.player)
-
     def check_events(self, *event_list):
         for event_cls in event_list:
             e = event_cls(self)
-            if self.debug or random.random() <= e.base_rate and e.condition(self.player):
-                result = e.do(self.player)
-                self.ui.update()
-                if not result:
-                    return False
+
+            if not all([
+                e.condition(),
+                e.ask(),
+                self.debug or random.random() <= e.base_rate,
+            ]):
+                continue
+
+            result = e.do()
+            self.ui.update()
+
+            if not result:
+                return False
+
         return True
 
     def do_turn(self):
         """Runs one turn in the game"""
+
         def comma_list(str_list, conjunction='or'):
             return ', '.join(str_list[:-1]) + f', {conjunction} ' + str_list[-1]
 
@@ -95,19 +101,19 @@ class Game:
         self.ui.update()
 
         if not self.check_events(
-            event.VisitLi,
-            event.McHenry,
-            event.WuWarning,
-            event.VisitWu,
-            event.Cutthroats,
-            event.NewShip,
-            event.NewGun,
-            event.OpiumSeizure,
-            event.WarehouseTheft,
-            event.LiWaits,
-            event.LiMessenger,
-            event.GoodPrices,
-            event.Mugging
+                event.VisitLi,
+                event.McHenry,
+                event.WuWarning,
+                event.VisitWu,
+                event.Cutthroats,
+                event.NewShip,
+                event.NewGun,
+                event.OpiumSeizure,
+                event.WarehouseTheft,
+                event.LiWaits,
+                event.LiMessenger,
+                event.GoodPrices,
+                event.Mugging
         ):
             return self.end()
 
@@ -126,8 +132,8 @@ class Game:
                 self.ui.tell("You're already here, Taipan.", wait=5)
 
         if not self.check_events(
-            event.Encounter,
-            event.Storm,
+                event.HostileEncounter,
+                event.Storm,
         ):
             return self.end()
 
@@ -222,5 +228,3 @@ class Game:
             self.ui.tell(rating_str)
 
         self.ui.tell("_______________________________")
-
-

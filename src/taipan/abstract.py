@@ -110,9 +110,12 @@ class StorageObject:
 class Event(GameObject, metaclass=abc.ABCMeta):
     base_rate = 1
 
-    def condition(self, player):
+    def ask(self):
+        return True
+
+    def condition(self):
         return True
 
     @abc.abstractmethod
-    def do(self, player):
+    def do(self):
         raise NotImplementedError
