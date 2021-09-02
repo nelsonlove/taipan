@@ -9,6 +9,8 @@ from string import comma_list, goods_str, date_str
 from time import sleep
 
 term = blessed.Terminal()
+if term.width < 80 or term.height < 25:
+    quit("Taipan requires a minimum resolution of 80x25.")
 
 
 def clear_screen():
