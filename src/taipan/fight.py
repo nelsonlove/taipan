@@ -142,8 +142,8 @@ class Battle(GameObject):
     def throw_cargo(self):
         self.throw_cargo()
         prompt = strings.goods_str(self.ship,
-                                  "You have the following on board, Taipan:"
-                                  ) + "What shall I throw overboard, Taipan?"
+                                   "You have the following on board, Taipan:"
+                                   ) + "What shall I throw overboard, Taipan?"
         good = self.ui.choose_good(prompt, wild='*', prices=False)
 
         if good != '*':
