@@ -22,7 +22,7 @@ def buy(player):
 
 
 def sell(player):
-    good = player.ui.choose_good(player, "What do you wish me to sell, Taipan?", player.port)
+    good = player.ui.choose_good("What do you wish me to sell, Taipan?", player.port)
 
     amount = player.ui.ask_num(f"{strings.goods_str(player.port)}\nHow much {good} shall I sell, Taipan?")
 

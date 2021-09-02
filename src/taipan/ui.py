@@ -8,6 +8,10 @@ from abstract import GameObject
 from strings import comma_list, goods_str, date_str
 from time import sleep
 
+
+ALLOW_SKIP_WAIT = False
+
+
 term = blessed.Terminal()
 if term.width < 80 or term.height < 25:
     quit("Taipan requires a minimum resolution of 80x25.")
@@ -99,11 +103,6 @@ class UIObject:
         self.clear()
 
     @staticmethod
-    def wait(timeout=3):
-        with term.cbreak(), term.hidden_cursor():
-            term.inkey(timeout=timeout)
-
-    @staticmethod
     def sleep(s):
         with term.cbreak(), term.hidden_cursor():
             sleep(s)
@@ -177,18 +176,25 @@ class UIObject:
             print('', end='', flush=True)
 
     def print(self, x, y, string, flush=True):
+        x += self.x1 + int(self.border)
+        y += self.y1 + int(self.border)
+
         with term.hidden_cursor():
-            print(term.move_xy(self.x1 + x + bool(self.border), self.y1 + y + bool(self.border)), end='')
+            print(term.move_xy(x, y), end='')
+
             for char in str(string):
                 if char == ' ' and self.ignore_space:
                     char = term.move_right(1)
-                with term.hidden_cursor():
-                    print(char, end='', flush=True)
+                print(char, end='')
+
         if flush:
             self.flush()
 
     def clear(self):
-        lines = [' ' * (self.size[0] - 2 * int(self.border))] * (self.size[1] - 2 * int(self.border))
+        cols = self.size[0] - 2 * int(self.border)
+        rows = self.size[1] - 2 * int(self.border)
+        lines = [' ' * cols] * rows
+
         for y, line in enumerate(lines):
             self.print(0, y, line)
 
@@ -209,11 +215,12 @@ class UIObject:
 class StaticUIObject(UIObject):
     def __init__(self, x1, y1, content, color=None, ignore_space=True, **kwargs):
         self.color = color or term.normal
-        lines = content.strip('\n').split('\n')
-        x2 = x1 + len(lines[0]) - 1
-        y2 = y1 + len(lines) - 1
+        self.lines = content.strip('\n').split('\n')
+
+        x2 = x1 + len(self.lines[0]) - 1
+        y2 = y1 + len(self.lines) - 1
+
         super().__init__(x1, y1, x2, y2, border=False, ignore_space=ignore_space, **kwargs)
-        self.lines = lines
 
     def animate(self, *gfx, delay=0.1):
         for graphic in gfx:
@@ -229,10 +236,6 @@ class StaticUIObject(UIObject):
         self.lines = string.split('\n')
         self.update()
 
-    def fit(self):
-        self.x2 = self.x1 + max([len(line) for line in self.lines]) - 1
-        self.y2 = self.y1 + len(self.lines) - 1
-
     def _update(self, *args, **kwargs):
         with term.hidden_cursor():
             print(self.color, end='')
@@ -246,27 +249,34 @@ class InteractiveUI(UIObject, GameObject):
         GameObject.__init__(self, game)
         UIObject.__init__(self, *args, **kwargs)
 
+    @staticmethod
+    def wait(timeout=3):
+        if timeout is True:
+            timeout = 3
+
+        with term.cbreak(), term.hidden_cursor():
+            if ALLOW_SKIP_WAIT:
+                term.inkey(timeout=timeout)
+            else:
+                sleep(timeout)
+
     def tell(self, message, wait=False, clear=True):
         if clear:
             self.clear()
-        lines = [line for block in message.split('\n') for line in wrap(block, width=self.size[0] - 4)]
+
+        # Reflow text
+        lines = [line for block in message.split('\n')
+                 for line in wrap(block, width=self.size[0] - 4)]
+
         for y, line in enumerate(lines):
             self.print(0, y, line)
 
-        self.flush()
-
-        if wait is True:
-            self.wait()
-        elif wait:
+        if wait:
             self.wait(wait)
 
-    def ask(self, prompt='', validate=None, **kwargs):  # TODO is anything using kwargs here?
+    def ask(self, prompt='', **kwargs):
         self.tell(prompt + ' ')
-
-        while True:
-            result = get_str(**kwargs)
-            if not validate or validate(result):  # TODO is anything using this?
-                return result
+        return get_str(**kwargs)
 
     #  TODO this should take a 'max' argument and return it if 'A' is entered
     def ask_num(self, prompt, max_length=8):
@@ -412,9 +422,6 @@ class CompradorUI(GameUI):
             cash=player.cash,
             bank=player.savings
         ))
-
-    def tell(self, *args, **kwargs):
-        super().tell(*args, **kwargs)
 
     def switch(self):
         self.game.ui = FightUI(self.game)

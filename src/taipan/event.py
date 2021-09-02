@@ -131,7 +131,7 @@ class VisitWu(Event):
                 else:
                     player.ui.tell(f"Taipan, you only have {player.cash} in cash.", wait=5)
 
-            player.ui.stats(player)
+            player.ui.update()
 
         while True:
             borrow_amount = player.ui.ask_num("How much do you wish to borrow?")
