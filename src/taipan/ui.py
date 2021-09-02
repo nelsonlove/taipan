@@ -279,10 +279,12 @@ class InteractiveUI(UIObject, GameObject):
         return get_str(**kwargs)
 
     #  TODO this should take a 'max' argument and return it if 'A' is entered
-    def ask_num(self, prompt, max_length=8):
+    def ask_num(self, prompt, max_length=8, max_num=None):
         num_str = self.ask(prompt,
-                           allowed=lambda c: str(c).isdigit(),
+                           allowed=lambda c: str(c).isdigit() or max_num and c.lower() == 'a',
                            max_length=max_length)
+        if max_num and num_str.lower() == 'a':
+            return max_num
         return int(num_str)
 
     def ask_orders(self, prompt, orders_list, other=None):
