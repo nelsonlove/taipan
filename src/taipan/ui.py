@@ -17,13 +17,19 @@ def clear_screen():
     print(term.home + term.clear, end='')
 
 
-def get_char(allowed=None):
-    with term.cbreak():
-        print(term.move_right(1), end='', flush=True)
-        while True:
-            char = term.getch()
-            if not allowed or char.lower() in allowed:
-                return char.lower()
+def get_char(allowed=None, hidden=False):
+    def _get_char():
+        with term.cbreak():
+            print(term.move_right(1), end='', flush=True)
+            while True:
+                char = term.getch()
+                if not allowed or char.lower() in allowed:
+                    return char.lower()
+    if hidden:
+        with term.hidden_cursor():
+            return _get_char()
+    else:
+        return _get_char()
 
 
 def get_str(*, max_length=None, bg=' ', allowed=None):
@@ -326,7 +332,7 @@ def splash():
         StaticUIObject(56, 0, graphics.credit, term.normal)
     ]:
         graphic.update()
-    get_char()
+    get_char(hidden=True)
 
 
 def firm_name():
@@ -343,7 +349,7 @@ def start_with_debt():
     box = StaticUIObject(0, 0, graphics.start_with_debt)
     box.center()
     box.update()
-    return get_char(allowed=['1', '2']) == '1'
+    return get_char(allowed=['1', '2'], hidden=True) == '1'
 
 
 class Stats(UIObject):
