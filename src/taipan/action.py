@@ -9,7 +9,7 @@ def buy(player):
 
         #  TODO max_purchase is supposed to show up in a little box
         amount = player.ui.ask_num(f"{strings.goods_str(player.port)}\nYou can afford {max_purchase}. How much "
-                                   f"{good} shall I buy, Taipan?")
+                                   f"{good} shall I buy, Taipan?", max_num=max_purchase)
 
         if amount == -1:
             amount = max_purchase
@@ -24,7 +24,8 @@ def buy(player):
 def sell(player):
     good = player.ui.choose_good("What do you wish me to sell, Taipan?", player.port)
 
-    amount = player.ui.ask_num(f"{strings.goods_str(player.port)}\nHow much {good} shall I sell, Taipan?")
+    amount = player.ui.ask_num(f"{strings.goods_str(player.port)}\nHow much {good} shall I sell, Taipan?",
+                               max_num=player.ship[good])
 
     if amount == -1 or player.ship[good] >= amount:
         amount = player.ship[good]
@@ -35,7 +36,7 @@ def sell(player):
 
 def bank(player):
     while True:
-        deposit_amount = player.ui.ask_num("How much will you deposit?")
+        deposit_amount = player.ui.ask_num("How much will you deposit?", max_num=player.cash)
 
         if deposit_amount == -1:
             deposit_amount = player.cash
@@ -50,7 +51,7 @@ def bank(player):
     player.ui.update()
 
     while True:
-        withdraw_amount = player.ui.ask_num("How much will you withdraw?")
+        withdraw_amount = player.ui.ask_num("How much will you withdraw?", max_num=player.savings)
 
         if withdraw_amount == -1:
             withdraw_amount = player.savings
@@ -74,7 +75,8 @@ def transfer(player):
         if player.ship[good]:
 
             while True:
-                amount = player.ui.ask_num(f"How much {good} shall I move to the warehouse, Taipan?")
+                amount = player.ui.ask_num(f"How much {good} shall I move to the warehouse, Taipan?",
+                                           max_num=player.ship[good])
 
                 if amount == -1:
                     amount = player.ship[good]
@@ -95,7 +97,8 @@ def transfer(player):
 
         if player.warehouse[good]:
             while True:
-                amount = player.ui.ask_num(f"How much {good} shall I move aboard ship, Taipan?")
+                amount = player.ui.ask_num(f"How much {good} shall I move aboard ship, Taipan?",
+                                           max_num=player.warehouse[good])
                 if amount == -1:
                     amount = player.warehouse[good]
 
@@ -115,7 +118,7 @@ def wu_cover(player, amount, debtor):
         player.cash = 0
         player.debt += diff
         player.wu_bailed_out = True
-        player.ui.stats(player)
+        player.ui.update()
         player.ui.tell(f"Elder Brother Wu has given {debtor} the difference between what he wanted and your cash on "
                        f"hand and added the same amount to your debt.", wait=5)
         return True
