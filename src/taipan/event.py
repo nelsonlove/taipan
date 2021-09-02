@@ -53,7 +53,7 @@ class McHenry(Event):
 
         repair_amount = player.ui.ask_num(
             f"Och, 'tis a pity to be {damage_percent:.0%} damaged. We can fix yer whole ship for {repair_price}, or "
-            f"make partial repairs if you wish. How much will ye spend?")
+            f"make partial repairs if you wish. How much will ye spend?", max_num=min(repair_price, player.cash))
 
         if repair_amount > player.cash:
             player.ui.tell("Taipan, you do not have enough cash!!", wait=True)
@@ -118,32 +118,30 @@ class VisitWu(Event):
 
         elif player.cash and player.debt:
             while True:
-                repay_amount = player.ui.ask_num("How much do you wish to repay him?")
-                if repay_amount == -1:
-                    repay_amount = player.cash if player.cash <= player.debt else player.debt
+                repay_amount = player.ui.ask_num("How much do you wish to repay him?",
+                                                 max_num=min(player.debt, player.cash))
 
-                if repay_amount <= player.cash:
-                    if repay_amount > player.debt:
-                        player.ui.tell(f"Taipan, you owe only {player.debt}.\nPaid in full.", wait=5)
-                        player.debt = 0
-                    player.cash -= repay_amount
-                    break
-                else:
+                if repay_amount > player.cash:
                     player.ui.tell(f"Taipan, you only have {player.cash} in cash.", wait=5)
+                else:
+                    if repay_amount > player.debt:
+                        repay_amount = player.debt
+                        player.ui.tell(f"Taipan, you owe only {player.debt}.\nPaid in full.", wait=5)
+                    break
+
+            player.debt -= repay_amount
+            player.cash -= repay_amount
 
             player.ui.update()
 
         while True:
-            borrow_amount = player.ui.ask_num("How much do you wish to borrow?")
-            if borrow_amount == -1:
-                borrow_amount = player.cash * 2
+            borrow_amount = player.ui.ask_num("How much do you wish to borrow?", max_num=player.cash * 2)
 
             if borrow_amount > player.cash * 2:
                 player.ui.tell("He won't loan you so much, Taipan!", wait=5)
             else:
                 player.debt += borrow_amount
                 player.cash += borrow_amount
-                player.ui.update()
                 break
 
         return True

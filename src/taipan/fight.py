@@ -147,7 +147,7 @@ class Battle(GameObject):
         good = self.ui.choose_good(prompt, wild='*', prices=False)
 
         if good != '*':
-            amount = self.ui.ask_num("How much, Taipan?")
+            amount = self.ui.ask_num("How much, Taipan?", max_amount=self.ship[good])
             if amount > self.ship[good] or self.ship[good] > 0 and amount == -1:
                 amount = self.ship[good]
             self.ship[good] -= amount
